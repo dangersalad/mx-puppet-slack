@@ -1,38 +1,20 @@
 #!/bin/sh -e
 
-if [ ! -f "$CONFIG_PATH" ]; then
+if [ ! -f '/config/config.yaml' ]; then
 	echo 'No config found'
+    echo
+    echo "Be sure to mount a config volume with \`-v /your/local/path:/config'."
 	exit 1
 fi
 
 args="$@"
 
-if [ ! -f "$REGISTRATION_PATH" ]; then
+if [ ! -f '/config/registration.yaml' ]; then
 	echo 'No registration found, generating now'
-	args="-r"
+    args="-r"
 fi
 
-
-# if no --uid is supplied, prepare files to drop privileges
-if [ "$(id -u)" = 0 ]; then
-	chown node:node /data
-
-	if find *.db > /dev/null 2>&1; then
-		# make sure sqlite files are writeable
-		chown node:node *.db
-	fi
-	if find *.log.* > /dev/null 2>&1; then
-		# make sure log files are writeable
-		chown node:node *.log.*
-	fi
-
-	su_exec='su-exec node:node'
-else
-	su_exec=''
-fi
-
-# $su_exec is used in case we have to drop the privileges
-exec $su_exec /usr/local/bin/node '/opt/mx-puppet-slack/build/index.js' \
-     -c "$CONFIG_PATH" \
-     -f "$REGISTRATION_PATH" \
+exec /usr/local/bin/node '/opt/mx-puppet-slack/build/index.js' \
+     -c '/config/config.yaml' \
+     -f '/config/registration.yaml' \
      $args
